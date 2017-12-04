@@ -7,27 +7,24 @@ import android.view.ViewGroup
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
 
-
-
 /**
  * Created by xuzhitao on 2017/12/1.
  *
  * @author xuzhitao
  */
-class DataBindingAdapter(internal var mContext: Context, internal var mLayoutId: Int, internal var mVarId: Int, private val mData: MutableList<out Any>)
-    : RecyclerView.Adapter<DataBindingAdapter.DataBindingViewHolder>() {
-    var onBindingViewHolderListener: OnBindingViewHolderListener? = null
-    var itemClickListener: ItemClickListener? = null
+class DataBindingAdapter(internal var mContext: Context, internal var mLayoutId: Int, internal var mVarId: Int)
+    : BaseRecycleAdapter() {
+    var mItemClickListener: ItemClickListener? = null
 
-    internal var headerView: View? = View(mContext)
-    internal var footerView: View? = View(mContext)
-    internal var haveHeader = false
-    internal var haveFooter = false
+    internal var mHeaderView: View? = View(mContext)
+    internal var mFooterView: View? = View(mContext)
+    internal var mHaveHeader = false
+    internal var mHaveFooter = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DataBindingViewHolder {
         when (viewType) {
-            TYPE_HEADER -> return DataBindingViewHolder(headerView?:View(mContext), viewType)
-            TYPE_FOOTER -> return DataBindingViewHolder(footerView?:View(mContext), viewType)
+            TYPE_HEADER -> return DataBindingViewHolder(mHeaderView ?:View(mContext), viewType)
+            TYPE_FOOTER -> return DataBindingViewHolder(mFooterView ?:View(mContext), viewType)
             TYPE_NORMAL -> return DataBindingViewHolder(View.inflate(mContext, mLayoutId, null), viewType)
             else -> return DataBindingViewHolder(View.inflate(mContext, mLayoutId, null), viewType)
         }
@@ -42,24 +39,20 @@ class DataBindingAdapter(internal var mContext: Context, internal var mLayoutId:
             else -> {
                 val binding = DataBindingUtil.bind<ViewDataBinding>(holder.itemView)
                 val data: Any?
-                if (haveHeader) {
-                    data = mData[position - 1]
+                if (mHaveHeader) {
+                    data = mDataList[position - 1]
                 } else {
-                    data = mData[position]
+                    data = mDataList[position]
                 }
 
-                if (itemClickListener != null) {
-                    holder.itemView.setOnClickListener { itemClickListener!!.itemClick(holder.itemView, position) }
+                if (mItemClickListener != null) {
+                    holder.itemView.setOnClickListener { mItemClickListener!!.itemClick(holder.itemView, position) }
                 }
 
                 binding.setVariable(mVarId, data)
                 binding.executePendingBindings()
-                if (onBindingViewHolderListener != null) {
-                    onBindingViewHolderListener!!.onHolderBinding(holder, position)
-                }
             }
         }
-
     }
 
     /**
@@ -67,8 +60,8 @@ class DataBindingAdapter(internal var mContext: Context, internal var mLayoutId:
      * @param view
      */
     fun addFooterView(view: View) {
-        haveFooter = true
-        footerView = view
+        mHaveFooter = true
+        mFooterView = view
     }
 
     /**
@@ -76,22 +69,22 @@ class DataBindingAdapter(internal var mContext: Context, internal var mLayoutId:
      * @param view
      */
     fun addHeaderView(view: View) {
-        haveHeader = true
-        headerView = view
+        mHaveHeader = true
+        mHeaderView = view
     }
 
     fun removeFooterView() {
-        footerView = null
-        haveFooter = false
+        mFooterView = null
+        mHaveFooter = false
     }
 
     fun cleanData() {
-        mData.clear()
+        mDataList.clear()
         notifyDataSetChanged()
     }
 
     val allData: List<*>
-        get() = mData
+        get() = mDataList
 
 //    fun addData(data: List<Any>) {
 //        mData.addAll(data)
@@ -100,18 +93,18 @@ class DataBindingAdapter(internal var mContext: Context, internal var mLayoutId:
 
     override fun getItemCount(): Int {
         var extraCount = 0
-        if (haveHeader) {
+        if (mHaveHeader) {
             extraCount++
-        } else if (haveFooter) {
+        } else if (mHaveFooter) {
             extraCount++
         }
-        return mData.size + extraCount
+        return mDataList.size + extraCount
     }
 
     override fun getItemViewType(position: Int): Int {
-        if (position == 0 && haveHeader) {
+        if (position == 0 && mHaveHeader) {
             return TYPE_HEADER
-        } else if (position == mData.size && haveFooter) {
+        } else if (position == mDataList.size && mHaveFooter) {
             return TYPE_FOOTER
         } else {
             return TYPE_NORMAL
